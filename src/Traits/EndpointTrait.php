@@ -144,7 +144,7 @@ trait EndpointTrait
             $content = is_string($body) ? $body : $this->bodySerialize($body, $headers['Content-Type']);
             $request = $request->withBody($streamFactory->createStream($content));
         }
-        $headers = $this->buildCompatibilityHeaders($headers);
+        //$headers = $this->buildCompatibilityHeaders($headers);
 
         // Headers
         foreach ($headers as $name => $value) {
