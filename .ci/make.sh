@@ -33,6 +33,7 @@ TASK=$1
 TASK_ARGS=()
 VERSION=$2
 STACK_VERSION=$VERSION
+WORKFLOW=${WORKFLOW-staging}
 set -euo pipefail
 
 product="elastic/elasticsearch-php"
@@ -142,7 +143,11 @@ if [[ "$CMD" == "assemble" ]]; then
     rsync -ar --exclude=.ci --exclude=.git --filter=':- .gitignore' "$PWD" "${output_folder}/."
 
     if compgen -G ".ci/output/*" > /dev/null; then
-        cd $repo/.ci/output && tar -czf elasticsearch-php-$VERSION.tar.gz * && cd -
+        if [[ "$WORKFLOW" == "snapshot" ]]; then 
+            cd $repo/.ci/output && tar -czf elasticsearch-php-$VERSION-SNAPSHOT.tar.gz * && cd -
+        else
+            cd $repo/.ci/output && tar -czf elasticsearch-php-$VERSION.tar.gz * && cd -
+        fi
         rm -Rf "${repo}/.ci/output/elasticsearch-php"
         echo -e "\033[32;1mTARGET: successfully assembled client v$VERSION\033[0m"
 		exit 0
@@ -154,12 +159,18 @@ fi
 
 if [[ "$CMD" == "bump" ]]; then
     # Change version to src/Client.php
-    # sed -i "s/const VERSION = '[0-9]\+.[0-9]\+.[0-9]\+\(-dev\)\?'/const VERSION = '$VERSION'/g" $repo/src/Client.php 
+    sed -i "s/const VERSION = '[0-9]\+\.[0-9]\+\.[0-9]\+'/const VERSION = '$VERSION'/" $repo/src/Client.php
+
+    # Change version to .github/workflows/unified-release.yml
+    sed -i "s/[0-9]\+\.[0-9]\+\.[0-9]\+-SNAPSHOT/$VERSION-SNAPSHOT/" $repo/.github/workflows/unified-release.yml
+
+    MINOR_VERSION=`echo $VERSION | grep -Eo "[0-9]+.[0-9]+"`
 
     # Change version to .ci/test-matrix.yml
-    
-    # Change version to .github/workflows/unified-release.yml
+    sed -i "s/[0-9]\+\.[0-9]\+-SNAPSHOT/$MINOR_VERSION-SNAPSHOT/" $repo/.ci/test-matrix.yml
 
+    # Change version to .github/workflows/test.yml
+    sed -i "s/es-version: \[[0-9]\+\.[0-9]\+\.\?[0-9]\?-SNAPSHOT\]/es-version: \[$MINOR_VERSION-SNAPSHOT\]/" $repo/.github/workflows/test.yml
 fi
 
 if [[ "$CMD" == "codegen" ]]; then
