@@ -39,4 +39,4 @@ RUN composer install --no-progress > /dev/null
 
 COPY . .
 
-CMD ["bash", ".ci/yaml-tests.sh"]
+CMD ["bash", ".buildkite/yaml-tests.sh"]

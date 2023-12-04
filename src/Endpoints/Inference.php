@@ -26,15 +26,17 @@ use Http\Promise\Promise;
 /**
  * @generated This file is generated, please do not edit
  */
-class Logstash extends AbstractEndpoint
+class Inference extends AbstractEndpoint
 {
 	/**
-	 * Deletes Logstash Pipelines used by Central Management
+	 * Delete model in the Inference API
 	 *
-	 * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/logstash-api-delete-pipeline.html
+	 * @see https://www.elastic.co/guide/en/elasticsearch/reference/master/delete-inference-api.html
+	 * @internal This API is EXPERIMENTAL and may be changed or removed completely in a future release
 	 *
 	 * @param array{
-	 *     id: string, // (REQUIRED) The ID of the Pipeline
+	 *     task_type: string, // (REQUIRED) The model task type
+	 *     model_id: string, // (REQUIRED) The model Id
 	 *     pretty: boolean, // Pretty format the returned JSON response. (DEFAULT: false)
 	 *     human: boolean, // Return human readable values for statistics. (DEFAULT: true)
 	 *     error_trace: boolean, // Include the stack trace of returned errors. (DEFAULT: false)
@@ -49,10 +51,10 @@ class Logstash extends AbstractEndpoint
 	 *
 	 * @return Elasticsearch|Promise
 	 */
-	public function deletePipeline(array $params = [])
+	public function deleteModel(array $params = [])
 	{
-		$this->checkRequiredParameters(['id'], $params);
-		$url = '/_logstash/pipeline/' . $this->encode($params['id']);
+		$this->checkRequiredParameters(['task_type','model_id'], $params);
+		$url = '/_inference/' . $this->encode($params['task_type']) . '/' . $this->encode($params['model_id']);
 		$method = 'DELETE';
 
 		$url = $this->addQueryString($url, $params, ['pretty','human','error_trace','source','filter_path']);
@@ -64,55 +66,19 @@ class Logstash extends AbstractEndpoint
 
 
 	/**
-	 * Retrieves Logstash Pipelines used by Central Management
+	 * Get a model in the Inference API
 	 *
-	 * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/logstash-api-get-pipeline.html
+	 * @see https://www.elastic.co/guide/en/elasticsearch/reference/master/get-inference-api.html
+	 * @internal This API is EXPERIMENTAL and may be changed or removed completely in a future release
 	 *
 	 * @param array{
-	 *     id: string, //  A comma-separated list of Pipeline IDs
+	 *     task_type: string, // (REQUIRED) The model task type
+	 *     model_id: string, // (REQUIRED) The model Id
 	 *     pretty: boolean, // Pretty format the returned JSON response. (DEFAULT: false)
 	 *     human: boolean, // Return human readable values for statistics. (DEFAULT: true)
 	 *     error_trace: boolean, // Include the stack trace of returned errors. (DEFAULT: false)
 	 *     source: string, // The URL-encoded request definition. Useful for libraries that do not accept a request body for non-POST requests.
 	 *     filter_path: list, // A comma-separated list of filters used to reduce the response.
-	 * } $params
-	 *
-	 * @throws NoNodeAvailableException if all the hosts are offline
-	 * @throws ClientResponseException if the status code of response is 4xx
-	 * @throws ServerResponseException if the status code of response is 5xx
-	 *
-	 * @return Elasticsearch|Promise
-	 */
-	public function getPipeline(array $params = [])
-	{
-		if (isset($params['id'])) {
-			$url = '/_logstash/pipeline/' . $this->encode($params['id']);
-			$method = 'GET';
-		} else {
-			$url = '/_logstash/pipeline';
-			$method = 'GET';
-		}
-		$url = $this->addQueryString($url, $params, ['pretty','human','error_trace','source','filter_path']);
-		$headers = [
-			'Accept' => 'application/json',
-		];
-		return $this->client->sendRequest($this->createRequest($method, $url, $headers, $params['body'] ?? null));
-	}
-
-
-	/**
-	 * Adds and updates Logstash Pipelines used for Central Management
-	 *
-	 * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/logstash-api-put-pipeline.html
-	 *
-	 * @param array{
-	 *     id: string, // (REQUIRED) The ID of the Pipeline
-	 *     pretty: boolean, // Pretty format the returned JSON response. (DEFAULT: false)
-	 *     human: boolean, // Return human readable values for statistics. (DEFAULT: true)
-	 *     error_trace: boolean, // Include the stack trace of returned errors. (DEFAULT: false)
-	 *     source: string, // The URL-encoded request definition. Useful for libraries that do not accept a request body for non-POST requests.
-	 *     filter_path: list, // A comma-separated list of filters used to reduce the response.
-	 *     body: array, // (REQUIRED) The Pipeline to add or update
 	 * } $params
 	 *
 	 * @throws MissingParameterException if a required parameter is missing
@@ -122,10 +88,87 @@ class Logstash extends AbstractEndpoint
 	 *
 	 * @return Elasticsearch|Promise
 	 */
-	public function putPipeline(array $params = [])
+	public function getModel(array $params = [])
 	{
-		$this->checkRequiredParameters(['id','body'], $params);
-		$url = '/_logstash/pipeline/' . $this->encode($params['id']);
+		$this->checkRequiredParameters(['task_type','model_id'], $params);
+		$url = '/_inference/' . $this->encode($params['task_type']) . '/' . $this->encode($params['model_id']);
+		$method = 'GET';
+
+		$url = $this->addQueryString($url, $params, ['pretty','human','error_trace','source','filter_path']);
+		$headers = [
+			'Accept' => 'application/json',
+		];
+		return $this->client->sendRequest($this->createRequest($method, $url, $headers, $params['body'] ?? null));
+	}
+
+
+	/**
+	 * Perform inference on a model
+	 *
+	 * @see https://www.elastic.co/guide/en/elasticsearch/reference/master/post-inference-api.html
+	 * @internal This API is EXPERIMENTAL and may be changed or removed completely in a future release
+	 *
+	 * @param array{
+	 *     task_type: string, // (REQUIRED) The model task type
+	 *     model_id: string, // (REQUIRED) The model Id
+	 *     pretty: boolean, // Pretty format the returned JSON response. (DEFAULT: false)
+	 *     human: boolean, // Return human readable values for statistics. (DEFAULT: true)
+	 *     error_trace: boolean, // Include the stack trace of returned errors. (DEFAULT: false)
+	 *     source: string, // The URL-encoded request definition. Useful for libraries that do not accept a request body for non-POST requests.
+	 *     filter_path: list, // A comma-separated list of filters used to reduce the response.
+	 *     body: array, //  The inference payload
+	 * } $params
+	 *
+	 * @throws MissingParameterException if a required parameter is missing
+	 * @throws NoNodeAvailableException if all the hosts are offline
+	 * @throws ClientResponseException if the status code of response is 4xx
+	 * @throws ServerResponseException if the status code of response is 5xx
+	 *
+	 * @return Elasticsearch|Promise
+	 */
+	public function inference(array $params = [])
+	{
+		$this->checkRequiredParameters(['task_type','model_id'], $params);
+		$url = '/_inference/' . $this->encode($params['task_type']) . '/' . $this->encode($params['model_id']);
+		$method = 'POST';
+
+		$url = $this->addQueryString($url, $params, ['pretty','human','error_trace','source','filter_path']);
+		$headers = [
+			'Accept' => 'application/json',
+			'Content-Type' => 'application/json',
+		];
+		return $this->client->sendRequest($this->createRequest($method, $url, $headers, $params['body'] ?? null));
+	}
+
+
+	/**
+	 * Configure a model for use in the Inference API
+	 *
+	 * @see https://www.elastic.co/guide/en/elasticsearch/reference/master/put-inference-api.html
+	 * @internal This API is EXPERIMENTAL and may be changed or removed completely in a future release
+	 *
+	 * @param array{
+	 *     task_type: string, // (REQUIRED) The model task type
+	 *     model_id: string, // (REQUIRED) The model Id
+	 *     pretty: boolean, // Pretty format the returned JSON response. (DEFAULT: false)
+	 *     human: boolean, // Return human readable values for statistics. (DEFAULT: true)
+	 *     error_trace: boolean, // Include the stack trace of returned errors. (DEFAULT: false)
+	 *     source: string, // The URL-encoded request definition. Useful for libraries that do not accept a request body for non-POST requests.
+	 *     filter_path: list, // A comma-separated list of filters used to reduce the response.
+	 *     body: array, //  The model's task and service settings
+	 * } $params
+	 *
+	 * @throws MissingParameterException if a required parameter is missing
+	 * @throws NoNodeAvailableException if all the hosts are offline
+	 * @throws ClientResponseException if the status code of response is 4xx
+	 * @throws ServerResponseException if the status code of response is 5xx
+	 *
+	 * @return Elasticsearch|Promise
+	 */
+	public function putModel(array $params = [])
+	{
+		$this->checkRequiredParameters(['task_type','model_id'], $params);
+		$url = '/_inference/' . $this->encode($params['task_type']) . '/' . $this->encode($params['model_id']);
 		$method = 'PUT';
 
 		$url = $this->addQueryString($url, $params, ['pretty','human','error_trace','source','filter_path']);

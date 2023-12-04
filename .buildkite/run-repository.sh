@@ -9,7 +9,7 @@ script_path=$(dirname $(realpath -s $0))
 source $script_path/functions/imports.sh
 set -euo pipefail
 
-PHP_VERSION=${PHP_VERSION-8.0-cli}
+PHP_VERSION=${PHP_VERSION-8.2-cli}
 ELASTICSEARCH_URL=${ELASTICSEARCH_URL-"$elasticsearch_url"}
 elasticsearch_container=${elasticsearch_container-}
 
@@ -23,7 +23,7 @@ echo -e "\033[1m>>>>> Build docker container >>>>>>>>>>>>>>>>>>>>>>>>>>>>>\033[0
 
 docker build \
   --no-cache \
-  --file .ci/Dockerfile \
+  --file $script_path/Dockerfile \
   --tag elastic/elasticsearch-php \
   --build-arg PHP_VERSION=${PHP_VERSION} \
   .

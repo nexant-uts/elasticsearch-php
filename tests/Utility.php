@@ -192,6 +192,17 @@ class Utility
             'level' => 'shards'
         ]);
     }
+    /**
+     * Determines whether the system feature reset API should be invoked between tests. The default implementation is to reset
+     * all feature states, deleting system indices, system associated indices, and system data streams.
+     * 
+     * @see https://github.com/elastic/elasticsearch/blob/main/test/framework/src/main/java/org/elasticsearch/test/rest/ESRestTestCase.java#L546
+     */
+
+    private static function resetFeaturesStates(Client $client): bool
+    {
+        return self::$hasMl || version_compare(self::getVersion($client), '8.6.99') > 0;
+    }
 
      /**
      * Delete the cluster
@@ -212,6 +223,9 @@ class Utility
         }
 
         self::wipeSnapshots($client);
+        if (self::resetFeaturesStates($client)) {
+            $client->features()->resetFeatures();
+        }
         self::wipeDataStreams($client);
         self::wipeAllIndices($client);
 
@@ -317,28 +331,10 @@ class Utility
         ]);
         foreach ($repos->asArray() as $repository => $value) {
             if ($value['type'] === 'fs') {
-                $response = $client->snapshot()->get([
+                $client->snapshot()->delete([
                     'repository' => $repository,
-                    'snapshot' => '_all',
-                    'ignore_unavailable' => true
+                    'snapshot' => '*'
                 ]);
-                if (isset($response['responses'])) {
-                    $response = $response['responses'][0];
-                }
-                if (isset($response['snapshots'])) {
-                    foreach ($response['snapshots'] as $snapshot) {
-                        try {
-                            $client->snapshot()->delete([
-                                'repository' => $repository,
-                                'snapshot' => $snapshot['snapshot']
-                            ]);
-                        } catch (ClientResponseException $e) {
-                            if ($e->getCode() !== 404) {
-                                throw $e;
-                            }
-                        }
-                    }
-                }
             }
             try {
                 $client->snapshot()->deleteRepository([
@@ -518,7 +514,7 @@ class Utility
         }
         try {
             $client->indices()->delete([
-                'index' => '*,-.ds-ilm-history-*',
+                'index' => '*,-.ds-ilm-history-*,-.ds-.slm-history-*',
                 'expand_wildcards' => $expand
             ]);
         } catch (ClientResponseException $e) {
@@ -652,6 +648,9 @@ class Utility
      */
     private static function isXPackTemplate(string $name): bool
     {
+        if (strpos($name, '@') !== false) {
+            return true;
+        }
         if (strpos($name, '.monitoring-') !== false) {
             return true;
         }
@@ -670,11 +669,28 @@ class Utility
         if (strpos($name, '.deprecation-') !== false) {
             return true;
         }
+        if (strpos($name, '.fleet-') !== false) {
+            return true;
+        }
+        if (strpos($name, 'behavioral_analytics-') !== false) {
+            return true;
+        }
+        if (strpos($name, 'profiling-') !== false) {
+            return true;
+        }
+        if (strpos($name, 'elastic-connectors') !== false) {
+            return true;
+        }
+        if (strpos($name, 'apm-') === 0 || strpos($name, 'traces-apm') === 0 ||
+            strpos($name, 'metrics-apm') === 0 || strpos($name, 'logs-apm') === 0) {
+            return true;
+        }
         switch ($name) {
             case ".watches":
             case "security_audit_log":
             case ".slm-history":
             case ".async-search":
+            case ".profiling-ilm-lock":
             case "saml-service-provider":
             case "logs":
             case "logs-settings":
@@ -690,6 +706,8 @@ class Utility
             case "logstash-index-template":
             case "security-index-template":
             case "data-streams-mappings":
+            case "search-acl-filter":
+            case ".kibana-reporting":
                 return true;
             default:
                 return false;
@@ -709,17 +727,34 @@ class Utility
             "watch-history-ilm-policy", 
             "watch-history-ilm-policy-16",
             "ml-size-based-ilm-policy", 
-            "logs", 
+            "logs",
+            "logs@lifecycle", 
             "metrics",
+            "metrics@lifecycle",
+            "profiling",
+            "profiling@lifecycle",
             "synthetics",
+            "synthetics@lifecycle",
             "7-days-default",
+            "7-days@lifecycle",
             "30-days-default",
+            "30-days@lifecycle",
             "90-days-default",
+            "90-days@lifecycle",
             "180-days-default",
+            "180-days@lifecycle",
             "365-days-default",
+            "365-days@lifecycle",
+            ".fleet-files-ilm-policy",
+            ".fleet-file-data-ilm-policy",
             ".fleet-actions-results-ilm-policy",
+            ".fleet-file-fromhost-data-ilm-policy",
+            ".fleet-file-fromhost-meta-ilm-policy",
+            ".fleet-file-tohost-data-ilm-policy",
+            ".fleet-file-tohost-meta-ilm-policy",
             ".deprecation-indexing-ilm-policy",
-            ".monitoring-8-ilm-policy"
+            ".monitoring-8-ilm-policy",
+            "behavioral_analytics-events-default_policy"
         ];
     }
 
