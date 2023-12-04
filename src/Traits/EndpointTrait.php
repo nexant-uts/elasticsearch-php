@@ -58,7 +58,7 @@ trait EndpointTrait
     /**
      * Converts array to comma-separated list;
      * Converts boolean value to true', 'false' string
-     * 
+     *
      * @param mixed $value
      */
     private function convertValue($value): string
@@ -75,7 +75,7 @@ trait EndpointTrait
 
     /**
      * Encode a value for a valid URL
-     * 
+     *
      * @param mixed $value
      */
     protected function encode($value): string
@@ -103,7 +103,7 @@ trait EndpointTrait
 
     /**
      * Serialize the body using the Content-Type
-     * 
+     *
      * @param mixed $body
      */
     protected function bodySerialize($body, string $contentType): string
@@ -124,7 +124,7 @@ trait EndpointTrait
 
     /**
      * Create a PSR-7 request
-     * 
+     *
      * @param array|string $body
      */
     protected function createRequest(string $method, string $url, array $headers, $body = null): RequestInterface
@@ -137,15 +137,15 @@ trait EndpointTrait
         if (!empty($body)) {
             if (!isset($headers['Content-Type'])) {
                 throw new ContentTypeException(sprintf(
-                    "The Content-Type is missing for %s %s", 
-                    $method, 
+                    "The Content-Type is missing for %s %s",
+                    $method,
                     $url
                 ));
             }
             $content = is_string($body) ? $body : $this->bodySerialize($body, $headers['Content-Type']);
             $request = $request->withBody($streamFactory->createStream($content));
         }
-        $headers = $this->buildCompatibilityHeaders($headers);
+//        $headers = $this->buildCompatibilityHeaders($headers);
 
         // Headers
         foreach ($headers as $name => $value) {
@@ -157,7 +157,7 @@ trait EndpointTrait
     /**
      * Build the API compatibility headers
      * transfrom Content-Type and Accept adding vnd.elasticsearch+ and compatible-with
-     * 
+     *
      * @see https://github.com/elastic/elasticsearch-php/pull/1142
      */
     protected function buildCompatibilityHeaders(array $headers): array
@@ -170,7 +170,7 @@ trait EndpointTrait
         if (isset($headers['Accept'])) {
             $values = explode(',', $headers['Accept']);
             foreach ($values as &$value) {
-                if (preg_match('/(application|text)\/([^,]+)/', $value, $matches)) { 
+                if (preg_match('/(application|text)\/([^,]+)/', $value, $matches)) {
                     $value = sprintf(Client::API_COMPATIBILITY_HEADER, $matches[1], $matches[2]);
                 }
             }

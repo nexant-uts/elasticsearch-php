@@ -28,11 +28,11 @@ trait ProductCheckTrait
         $statusCode = (int) $response->getStatusCode();
         if ($statusCode >= 200 && $statusCode < 300) {
             $product = $response->getHeaderLine(Elasticsearch::HEADER_CHECK);
-            if (empty($product) || $product !== Elasticsearch::PRODUCT_NAME) {
-                throw new ProductCheckException(
-                    'The client noticed that the server is not Elasticsearch and we do not support this unknown product'
-                );
-            }
+//            if (empty($product) || $product !== Elasticsearch::PRODUCT_NAME) {
+//                throw new ProductCheckException(
+//                    'The client noticed that the server is not Elasticsearch and we do not support this unknown product'
+//                );
+//            }
         }
     }
 }
